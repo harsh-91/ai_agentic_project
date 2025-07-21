@@ -1,1 +1,1 @@
-# ai_agentic_project
+# AI Agentic Platform
