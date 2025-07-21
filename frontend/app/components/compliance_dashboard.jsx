@@ -1,24 +1,29 @@
 import React, { useState } from "react";
+import { useUser } from "./UserContext";
 import { fetchAudit } from "./api";
+import { logInfo, logError } from "./logger";
 
 export default function ComplianceDashboard() {
-  const [userId, setUserId] = useState("");
+  const { user } = useUser();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
 
   async function loadEvents() {
     setLoading(true);
-    const evs = await fetchAudit(userId);
-    setEvents(evs);
+    logInfo("UI:Compliance load", {user});
+    try {
+      const evs = await fetchAudit(user && user.id);
+      setEvents(evs);
+      logInfo("UI:Compliance events", evs);
+    } catch(e) {
+      logError("UI:Compliance load error",e);
+    }
     setLoading(false);
   }
   return (
     <div>
       <h2>Compliance & Audit Log</h2>
-      <form onSubmit={e => {e.preventDefault(); loadEvents();}}>
-        <input placeholder="User ID (optional)" value={userId} onChange={e=>setUserId(e.target.value)} />
-        <button>Load Audit Events</button>
-      </form>
+      <button onClick={loadEvents} disabled={!user}>Load My Audit Events</button>
       {loading && <p>Loading...</p>}
       <ul>
         {events && events.map(ev =>
@@ -29,6 +34,7 @@ export default function ComplianceDashboard() {
           </li>
         )}
       </ul>
+      {!user && <p style={{color:"gray"}}>Register/login to view your compliance events.</p>}
     </div>
   );
 }
